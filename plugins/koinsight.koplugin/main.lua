@@ -1,4 +1,4 @@
-local _ = require("gettext")
+local _ = require("koinsight_l10n")
 local Dispatcher = require("dispatcher") -- luacheck:ignore
 local InfoMessage = require("ui/widget/infomessage")
 local logger = require("logger")
@@ -89,9 +89,10 @@ function koinsight:addToMainMenu(menu_items)
         callback = function()
           local const = require("./const")
           UIManager:show(InfoMessage:new({
-            text = "KoInsight is a sync plugin for KoInsight instances.\n\nPlugin version: "
-              .. const.VERSION
-              .. "\n\nSee https://github.com/GeorgeSG/koinsight.",
+            text = string.format(
+              _("KoInsight is a sync plugin for KoInsight instances.\n\nPlugin version: %s\n\nSee https://github.com/GeorgeSG/koinsight."),
+              const.VERSION
+            ),
           }))
         end,
       },
@@ -171,7 +172,7 @@ function koinsight:performFullSync()
     if not ok then
       UIManager:close(progress_info)
       logger.err("[KoInsight] Full sync failed: " .. tostring(err))
-      UIManager:show(InfoMessage:new({ text = _("Sync failed: " .. tostring(err)), timeout = 5 }))
+      UIManager:show(InfoMessage:new({ text = _("Sync failed: ") .. tostring(err), timeout = 5 }))
     end
   end)
 end
@@ -244,10 +245,10 @@ function koinsight:performSyncOnSuspend()
   end)
 
   if not success then
-    message = "Error during auto sync: " .. tostring(error_msg)
+    local message = "Error during auto sync: " .. tostring(error_msg)
     logger.err("[KoInsight] " .. message)
     UIManager:show(InfoMessage:new({
-      text = _(message),
+      text = _("Error during auto sync: ") .. tostring(error_msg),
     }))
   else
     logger.info("[KoInsight] Suspend sync completed successfully")

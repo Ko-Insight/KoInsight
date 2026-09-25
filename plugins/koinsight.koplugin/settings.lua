@@ -1,4 +1,4 @@
-local _ = require("gettext")
+local _ = require("koinsight_l10n")
 local BD = require("ui/bidi")
 local DataStorage = require("datastorage")
 local InfoMessage = require("ui/widget/infomessage")
