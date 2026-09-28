@@ -25,6 +25,12 @@ export const appConfig = {
     maxFileSizeMegaBytes: MAX_FILE_SIZE_MB,
   },
 
+  // Basic Auth is enabled only when both are set
+  auth:
+    process.env.AUTH_USERNAME && process.env.AUTH_PASSWORD
+      ? { username: process.env.AUTH_USERNAME, password: process.env.AUTH_PASSWORD }
+      : null,
+
   db: {
     dev: path.resolve(DATA_PATH, 'dev.sqlite3'),
     prod: path.resolve(DATA_PATH, 'prod.sqlite3'),

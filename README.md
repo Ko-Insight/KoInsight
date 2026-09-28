@@ -84,6 +84,17 @@ KoInsight can be configured using the following environment variables:
   *Default:* `100`
 - `DATA_PATH`: Path to the directory where KoInsight data (such as stats or uploads) will be stored.<br>
   *Default:* `../../../data` or `/app/data` in Docker.
+- `AUTH_USERNAME` / `AUTH_PASSWORD`: Enable HTTP Basic Auth for the web UI and API. Both must be set.<br>
+  *Default:* unset (no authentication)
+
+## Authentication
+KoInsight has no authentication by default. If you expose it to the internet, set `AUTH_USERNAME` and `AUTH_PASSWORD`.
+
+- **Web UI:** your browser will ask for the username and password.
+- **KOReader plugin:** put the credentials in the server URL, e.g. `https://username:password@koinsight.example.com`. URL-encode any special characters in the password.
+- **KOReader progress sync:** keeps working with its own KoSync username and password. Registering a new KoSync user requires the Basic Auth credentials, so include them in the progress sync server URL when registering.
+
+Always use HTTPS when authentication is enabled, since Basic Auth sends credentials with every request.
 
 # Usage
 
