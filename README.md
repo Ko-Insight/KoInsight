@@ -1,3 +1,13 @@
+# KoInsight is archived
+
+While we love the work we did with KoInsight, we've struggled to find the time and energy needed to continue its development. 
+
+As a result, we've decided to discontinue active development and archive KoInsight for the foreseeable future.
+
+We'd like to thank everyone who has used and supported the project. For those looking for an alternative, we recommend the excellent [BookOrbit](https://bookorbit.app/).
+
+---
+
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/heading.png">
