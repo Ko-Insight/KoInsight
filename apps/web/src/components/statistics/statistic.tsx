@@ -7,10 +7,11 @@ import style from './statistic.module.css';
 export type StatisticProps = {
   label: string;
   value: string | number;
+  detail?: string;
   icon: ComponentType<{ size: number; stroke: number; className: string }>;
 };
 
-export function Statistic({ label, value, icon: Icon }: StatisticProps): JSX.Element {
+export function Statistic({ label, value, detail, icon: Icon }: StatisticProps): JSX.Element {
   return (
     <Paper withBorder p="md" radius="md" key={label}>
       <Group justify="space-between">
@@ -22,15 +23,16 @@ export function Statistic({ label, value, icon: Icon }: StatisticProps): JSX.Ele
 
       <Group align="flex-end" gap="xs" mt={25}>
         <p className={style.Value}>{value}</p>
-        {/* <Text c={stat.diff > 0 ? 'teal' : 'red'} fz="sm" fw={500} className={style.diff}>
-          <span>{stat.diff}%</span>
-          <DiffIcon size={16} stroke={1.5} />
-        </Text> */}
       </Group>
 
-      {/* <Text fz="xs" c="dimmed" mt={7}>
-        Compared to previous month
-      </Text> */}
+      <Text
+        fz="xs"
+        c="dimmed"
+        mt={7}
+        className={detail ? style.Detail : `${style.Detail} ${style.DetailEmpty}`}
+      >
+        {detail ?? 'No detail'}
+      </Text>
     </Paper>
   );
 }

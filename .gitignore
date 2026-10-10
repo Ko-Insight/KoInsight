@@ -12,5 +12,6 @@ node_modules
 .env.development
 .env.production
 
+deploy.sh
 
 *.tsbuildinfo

@@ -26,16 +26,51 @@ export type CalendarEvent<T> = {
 export type CalendarProps<T> = {
   events: Record<string, CalendarEvent<T>>;
   dayRenderer?: (data: T) => ReactNode;
+  onDateRangeChange?: (range: { start: number; end: number }) => void;
 };
 
-export function Calendar<T>({ events, dayRenderer }: CalendarProps<T>): JSX.Element {
-  const [currentDate, setCurrentDate] = useState(new Date());
+function getMonthAnchor(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1, 12);
+}
+
+function formatMonthValue(date: Date) {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+  return `${year}-${month}-01`;
+}
+
+function parseMonthValue(value: string | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const [year, month] = value.split('-').map(Number);
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    return undefined;
+  }
+
+  return new Date(year, month - 1, 1, 12);
+}
+
+export function Calendar<T>({
+  events,
+  dayRenderer,
+  onDateRangeChange,
+}: CalendarProps<T>): JSX.Element {
+  const [currentDate, setCurrentDate] = useState(() => getMonthAnchor(new Date()));
 
   const startDate = startOfWeek(startOfMonth(currentDate), {
     locale: { options: { weekStartsOn: 1 } },
   });
   const endDate = endOfWeek(endOfMonth(currentDate), { locale: { options: { weekStartsOn: 1 } } });
+  const startTimestamp = startDate.getTime();
+  const endTimestamp = endDate.getTime();
   const dates = [];
+
+  useEffect(() => {
+    onDateRangeChange?.({ start: startTimestamp, end: endTimestamp });
+  }, [endTimestamp, onDateRangeChange, startTimestamp]);
 
   let day = startDate;
   while (day <= endDate) {
@@ -72,11 +107,11 @@ export function Calendar<T>({ events, dayRenderer }: CalendarProps<T>): JSX.Elem
     switch (e.key) {
       case 'ArrowLeft':
         e.preventDefault();
-        setCurrentDate(subMonths(currentDate, 1));
+        setCurrentDate((date) => getMonthAnchor(subMonths(date, 1)));
         break;
       case 'ArrowRight':
         e.preventDefault();
-        setCurrentDate(addMonths(currentDate, 1));
+        setCurrentDate((date) => getMonthAnchor(addMonths(date, 1)));
         break;
     }
   }
@@ -96,21 +131,30 @@ export function Calendar<T>({ events, dayRenderer }: CalendarProps<T>): JSX.Elem
             size="xs"
             variant="light"
             color="violet"
-            onClick={() => setCurrentDate(subMonths(currentDate, 1))}
+            onClick={() => setCurrentDate((date) => getMonthAnchor(subMonths(date, 1)))}
           >
             <IconArrowLeft size={16} />
           </Button>
 
-          <Button size="xs" variant="default" onClick={() => setCurrentDate(new Date())}>
+          <Button size="xs" variant="default" onClick={() => setCurrentDate(getMonthAnchor(new Date()))}>
             Today
           </Button>
-          <MonthPickerInput size="xs" value={currentDate} onChange={(e) => setCurrentDate(e!)} />
+          <MonthPickerInput
+            size="xs"
+            value={formatMonthValue(currentDate)}
+            onChange={(value) => {
+              const selectedMonth = parseMonthValue(value);
+              if (selectedMonth) {
+                setCurrentDate(selectedMonth);
+              }
+            }}
+          />
         </Flex>
         <Button
           size="xs"
           color="violet"
           variant="light"
-          onClick={() => setCurrentDate(addMonths(currentDate, 1))}
+          onClick={() => setCurrentDate((date) => getMonthAnchor(addMonths(date, 1)))}
         >
           <IconArrowRight size={16} />
         </Button>

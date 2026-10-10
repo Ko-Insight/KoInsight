@@ -1,4 +1,4 @@
-import { GetAllStatsResponse } from '@koinsight/common/types';
+import { GetStatsSummaryResponse } from '@koinsight/common/types';
 import { Request, Response, Router } from 'express';
 import { BooksRepository } from '../books/books-repository';
 import { StatsRepository } from './stats-repository';
@@ -6,33 +6,54 @@ import { StatsService } from './stats-service';
 
 const router = Router();
 
+function parseTimestampQueryParam(value: unknown) {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const timestamp = Number(value);
+  return Number.isFinite(timestamp) ? timestamp : undefined;
+}
+
 /**
- * Get all stats
+ * Get stats summary
  */
-router.get('/', async (_: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   const books = await BooksRepository.getAllWithData();
   const totalPagesRead = StatsService.totalPagesRead(books);
 
   const stats = await StatsRepository.getAll();
+  const requestedTimeZone = typeof req.query.time_zone === 'string' ? req.query.time_zone : 'UTC';
+  const timeZone = StatsService.isValidTimeZone(requestedTimeZone) ? requestedTimeZone : 'UTC';
   const perMonth = StatsService.getPerMonthReadingTime(stats);
   const perDayOfTheWeek = StatsService.perDayOfTheWeek(stats);
-  const mostPagesInADay = StatsService.mostPagesInADay(books, stats);
+  const dailyReadingStats = StatsService.dailyReadingStats(books, stats, timeZone);
   const totalReadingTime = StatsService.totalReadingTime(stats);
-  const longestDay = StatsService.longestDay(stats);
   const last7DaysReadTime = StatsService.last7DaysReadTime(stats);
 
-  const response: GetAllStatsResponse = {
-    stats,
+  const response: GetStatsSummaryResponse = {
     perMonth,
     perDayOfTheWeek,
-    mostPagesInADay,
+    mostPagesInADay: dailyReadingStats.mostPagesInADay,
     totalReadingTime,
-    longestDay,
+    longestDay: dailyReadingStats.longestDay,
     last7DaysReadTime,
+    currentDailyReadingStreak: dailyReadingStats.currentDailyReadingStreak,
+    longestDailyReadingStreak: dailyReadingStats.longestDailyReadingStreak,
     totalPagesRead,
   };
 
   res.status(200).json(response);
+});
+
+/**
+ * Get raw page stats
+ */
+router.get('/page-stats', async (req: Request, res: Response) => {
+  const start = parseTimestampQueryParam(req.query.start);
+  const end = parseTimestampQueryParam(req.query.end);
+  const stats = await StatsRepository.getAll({ start, end });
+  res.status(200).json(stats);
 });
 
 /**

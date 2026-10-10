@@ -9,11 +9,19 @@ import {
   useComputedColorScheme,
   useMantineTheme,
 } from '@mantine/core';
-import { IconClock, IconMaximize, IconPageBreak } from '@tabler/icons-react';
+import {
+  IconFiles,
+  IconFileStar,
+  IconClock,
+  IconClockStar,
+  IconFlame,
+  IconTrophy,
+} from '@tabler/icons-react';
+import { format } from 'date-fns';
 import { JSX, useMemo } from 'react';
 import { BarProps } from 'recharts';
 import { useBooks } from '../../api/books';
-import { usePageStats } from '../../api/use-page-stats';
+import { useStatsSummary } from '../../api/use-page-stats';
 import { CustomBar } from '../../components/charts/custom-bar';
 import { ReadingCalendar } from '../../components/statistics/reading-calendar';
 import { Statistics } from '../../components/statistics/statistics';
@@ -27,17 +35,18 @@ export function StatsPage(): JSX.Element {
 
   const {
     data: {
-      stats,
       perMonth,
       perDayOfTheWeek,
       mostPagesInADay,
       totalReadingTime,
       longestDay,
       last7DaysReadTime,
+      currentDailyReadingStreak,
+      longestDailyReadingStreak,
       totalPagesRead,
     },
     isLoading: statsLoading,
-  } = usePageStats();
+  } = useStatsSummary();
 
   const booksByMd5 = useMemo(() => {
     return books?.reduce(
@@ -48,6 +57,20 @@ export function StatsPage(): JSX.Element {
       {} as Record<string, Book>
     );
   }, [books]);
+
+  const formatStreakDays = (value: number) => `${value} day${value === 1 ? '' : 's'}`;
+  const formatLocalizedNumber = (value: number) => new Intl.NumberFormat().format(value);
+
+  const formatDateKey = (dateKey?: string) =>
+    dateKey ? format(new Date(`${dateKey}T12:00:00`), 'MMM d, yyyy') : 'No reading data yet';
+
+  const formatDateRange = (dateRange?: { start?: string; end?: string }) =>
+    dateRange?.start && dateRange.end
+      ? `${formatDateKey(dateRange.start)} - ${formatDateKey(dateRange.end)}`
+      : 'N/A';
+
+  const formatStartedOn = (dateKey?: string) =>
+    dateKey ? `Started on ${formatDateKey(dateKey)}` : undefined;
 
   if (booksLoading || statsLoading) {
     return (
@@ -88,18 +111,35 @@ export function StatsPage(): JSX.Element {
             },
             {
               label: 'Total pages read',
-              value: totalPagesRead,
-              icon: IconPageBreak,
+              value: formatLocalizedNumber(totalPagesRead),
+              icon: IconFiles,
             },
             {
               label: 'Longest time reading in a day',
-              value: formatSecondsToHumanReadable(longestDay),
-              icon: IconMaximize,
+              value: formatSecondsToHumanReadable(longestDay.duration),
+              detail: formatDateKey(longestDay.date),
+              icon: IconClockStar,
             },
             {
               label: 'Most pages in a day',
-              value: mostPagesInADay ?? 'N/A',
-              icon: IconMaximize,
+              value:
+                mostPagesInADay.pages !== null && mostPagesInADay.pages !== undefined
+                  ? formatLocalizedNumber(mostPagesInADay.pages)
+                  : 'N/A',
+              detail: formatDateKey(mostPagesInADay.date),
+              icon: IconFileStar,
+            },
+            {
+              label: 'Current Daily Reading Streak',
+              value: formatStreakDays(currentDailyReadingStreak.days),
+              detail: formatStartedOn(currentDailyReadingStreak.start),
+              icon: IconFlame,
+            },
+            {
+              label: 'Longest Daily Reading Streak',
+              value: formatStreakDays(longestDailyReadingStreak.days),
+              detail: formatDateRange(longestDailyReadingStreak),
+              icon: IconTrophy,
             },
           ]}
         />
@@ -113,7 +153,7 @@ export function StatsPage(): JSX.Element {
       <Title mt="xl" mb={4} order={3}>
         Weekly stats
       </Title>
-      <WeekStats stats={stats} booksByMd5={booksByMd5} />
+      <WeekStats booksByMd5={booksByMd5} />
       <Title mt="xl" order={3}>
         Per day of the week
       </Title>

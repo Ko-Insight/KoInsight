@@ -42,8 +42,18 @@ export function BookPageCoverSelector({
       loadedCovers: [],
       isSavingCovers: false,
     }));
-    const coverIds = await listCovers(state.query || book.title);
-    setState((prev) => ({ ...prev, isLoading: false, data: coverIds }));
+    try {
+      const coverIds = await listCovers(state.query || book.title);
+      setState((prev) => ({ ...prev, isLoading: false, data: coverIds }));
+    } catch (error) {
+      setState((prev) => ({ ...prev, isLoading: false, data: [] }));
+      notifications.show({
+        title: 'Error fetching covers',
+        message: `Unable to fetch covers for ${book.title}.`,
+        color: 'red',
+        position: 'top-center',
+      });
+    }
   };
 
   const onSave = async (coverId: string) => {

@@ -1,14 +1,14 @@
-import { Flex, Title } from '@mantine/core';
-import { formatDate, startOfDay } from 'date-fns';
+import { Flex } from '@mantine/core';
+import { endOfDay, formatDate, startOfDay, subDays } from 'date-fns';
 import { JSX, useMemo } from 'react';
 import { usePageStats } from '../../api/use-page-stats';
 import { formatSecondsToHumanReadable } from '../../utils/dates';
 import { DayData, DotTrail } from '../dot-trail/dot-trail';
 
 export function ReadingCalendar(): JSX.Element {
-  const {
-    data: { stats },
-  } = usePageStats();
+  const today = endOfDay(new Date()).getTime();
+  const start = startOfDay(subDays(today, 750)).getTime();
+  const { data: stats } = usePageStats({ start, end: today });
 
   const percentPerDay: Record<number, DayData> = useMemo(() => {
     const timePerDay = stats.reduce<Record<number, number>>((acc, stat) => {

@@ -31,3 +31,11 @@
   font-weight: 900;
   text-transform: uppercase;
 }
+
+.Detail {
+  min-height: 20px;
+}
+
+.DetailEmpty {
+  visibility: hidden;
+}

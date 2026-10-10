@@ -1,5 +1,3 @@
-import { PageStat } from './page-stat';
-
 export type PerMonthReadingTime = {
   month: string;
   duration: number;
@@ -13,13 +11,30 @@ export type PerDayOfTheWeek = {
   day: number;
 };
 
-export type GetAllStatsResponse = {
-  stats: PageStat[];
+export type ReadingPageStat = {
+  pages: number;
+  date?: string;
+};
+
+export type ReadingDayStat = {
+  duration: number;
+  date?: string;
+};
+
+export type DailyReadingStreak = {
+  days: number;
+  start?: string;
+  end?: string;
+};
+
+export type GetStatsSummaryResponse = {
   perMonth: PerMonthReadingTime[];
   perDayOfTheWeek: PerDayOfTheWeek[];
-  mostPagesInADay: number;
+  mostPagesInADay: ReadingPageStat;
   totalReadingTime: number;
-  longestDay: number;
+  longestDay: ReadingDayStat;
   last7DaysReadTime: number;
+  currentDailyReadingStreak: DailyReadingStreak;
+  longestDailyReadingStreak: DailyReadingStreak;
   totalPagesRead: number;
 };

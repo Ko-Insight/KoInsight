@@ -1,7 +1,7 @@
 import { Book } from '@koinsight/common/types/book';
 import { PageStat } from '@koinsight/common/types/page-stat';
 import { AreaChart } from '@mantine/charts';
-import { Flex, Popover, Text, useComputedColorScheme, useMantineTheme } from '@mantine/core';
+import { Flex, Loader, Popover, Text, useComputedColorScheme, useMantineTheme } from '@mantine/core';
 import { DatePicker } from '@mantine/dates';
 import {
   IconArrowsVertical,
@@ -16,7 +16,6 @@ import {
   endOfWeek,
   format,
   formatDate,
-  getDay,
   isBefore,
   isSameDay,
   startOfDay,
@@ -24,21 +23,21 @@ import {
 } from 'date-fns';
 import { groupBy, sum } from 'ramda';
 import { useMemo, useState } from 'react';
+import { usePageStats } from '../../api/use-page-stats';
 import { Statistics } from '../../components/statistics/statistics';
 import { formatSecondsToHumanReadable } from '../../utils/dates';
 
-export function WeekStats({
-  stats,
-  booksByMd5,
-}: {
-  stats: PageStat[];
-  booksByMd5: Record<string, Book>;
-}) {
+export function WeekStats({ booksByMd5 }: { booksByMd5: Record<string, Book> }) {
   const colorScheme = useComputedColorScheme();
   const { colors } = useMantineTheme();
 
   const [weekStart, setWeekStart] = useState<number>(
     startOfWeek(new Date(), { weekStartsOn: 1 }).getTime()
+  );
+
+  const weekStartDate = useMemo(
+    () => startOfWeek(weekStart, { weekStartsOn: 1 }).getTime(),
+    [weekStart]
   );
 
   const weekEnd = useMemo(() => {
@@ -47,10 +46,14 @@ export function WeekStats({
     return rawWeekEnd <= today ? rawWeekEnd : today;
   }, [weekStart]);
 
+  const { data: stats, isLoading: statsLoading } = usePageStats({
+    start: weekStartDate,
+    end: weekEnd,
+  });
+
   const weekData = useMemo(() => {
-    const start = startOfWeek(weekStart, { weekStartsOn: 1 }).getTime();
-    return stats?.filter(({ start_time }) => start_time < weekEnd && start_time > start);
-  }, [stats, weekStart, weekEnd]);
+    return stats?.filter(({ start_time }) => start_time < weekEnd && start_time > weekStartDate);
+  }, [stats, weekStartDate, weekEnd]);
 
   const weekDaysPassed = useMemo(
     () => differenceInCalendarDays(weekEnd, weekStart) + 1,
@@ -68,7 +71,7 @@ export function WeekStats({
           }
         }, 0) ?? 0
       ),
-    [weekData]
+    [booksByMd5, weekData]
   );
 
   const avgPagesPerDay = useMemo(() => {
@@ -88,7 +91,7 @@ export function WeekStats({
     );
 
     return Math.round(sum(pagesPerDay) / pagesPerDay.length);
-  }, [weekData]);
+  }, [booksByMd5, weekData]);
 
   const perDay = useMemo(() => {
     const perDayResult = [];
@@ -107,6 +110,14 @@ export function WeekStats({
 
     return perDayResult;
   }, [stats, weekStart, weekEnd]);
+
+  if (statsLoading) {
+    return (
+      <Flex justify="center" align="center" h={300}>
+        <Loader />
+      </Flex>
+    );
+  }
 
   return (
     <>
